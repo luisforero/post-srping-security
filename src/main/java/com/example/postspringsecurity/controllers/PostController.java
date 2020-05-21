@@ -1,5 +1,6 @@
 package com.example.postspringsecurity.controllers;
 
+import com.example.postspringsecurity.models.Comment;
 import com.example.postspringsecurity.models.Post;
 import com.example.postspringsecurity.models.User;
 import com.example.postspringsecurity.repositories.PostRepository;
@@ -13,9 +14,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.sql.Date;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.NoSuchElementException;
+import java.util.*;
 
 @Slf4j
 @RestController
@@ -76,6 +75,60 @@ public class PostController {
         } catch (NoSuchElementException e) {
             log.info(e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("POST not found");
+        } catch (Exception e) {
+            log.error(e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @PutMapping
+    public ResponseEntity<Post> updatePost(@RequestParam("postId") String postId, @RequestBody Post post) {
+        try {
+            Post postToUpdate = postRepository.findByObjectId(postId);
+            if (postToUpdate == null) {
+                throw new NoSuchElementException(String.format("No element found by ObjectID=%s", postId));
+            }
+            postToUpdate.setBody(post.getBody());
+            postToUpdate.setTitle(post.getTitle());
+            postToUpdate.setCategory(post.getCategory());
+            postToUpdate.setTags(post.getTags());
+            postToUpdate.setLastUpdate(Date.from(Instant.now()));
+            postRepository.save(postToUpdate);
+
+            return ResponseEntity.ok(postToUpdate);
+        } catch (NoSuchElementException e) {
+            log.info(e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        } catch (Exception e) {
+            log.error(e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @PutMapping(path = "/comment")
+    public ResponseEntity<Comment> addCommentPost(@RequestParam("id") String postId, @RequestBody Comment comment) {
+        try {
+            Post postToUpdate = postRepository.findByObjectId(postId);
+            if (postToUpdate == null) {
+                throw new NoSuchElementException(String.format("No element found by ObjectID=%s", postId));
+            }
+
+            List<Comment> comments = postToUpdate.getComments();
+
+            comment.setUser(authenticationFacade.getAuthentication().getName());
+            comment.setDate(Date.from(Instant.now()));
+
+            if (postToUpdate.getComments() == null) {
+                postToUpdate.setComments(Collections.singletonList(comment));
+            } else {
+                postToUpdate.getComments().add(comment);
+            }
+
+            postRepository.save(postToUpdate);
+            return ResponseEntity.ok(comment);
+        } catch (NoSuchElementException e) {
+            log.info(e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         } catch (Exception e) {
             log.error(e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
