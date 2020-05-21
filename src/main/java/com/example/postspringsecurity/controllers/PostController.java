@@ -9,12 +9,16 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.sql.Date;
 import java.time.Instant;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.NoSuchElementException;
 
 @Slf4j
 @RestController
@@ -28,6 +32,7 @@ public class PostController {
     AuthenticationFacade authenticationFacade;
 
     @GetMapping()
+    @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_VIEWER','ROLE_AUTHOR')")
     public ResponseEntity<List<Post>> getPosts() {
         try {
             List<Post> posts = new ArrayList<>();
@@ -43,6 +48,7 @@ public class PostController {
     }
 
     @PostMapping(path = "/addPost")
+    @PreAuthorize("hasAuthority('author:write')")
     public ResponseEntity<Post> addPost(@RequestBody Post post) {
         try {
             Authentication auth = authenticationFacade.getAuthentication();
@@ -63,6 +69,7 @@ public class PostController {
     }
 
     @DeleteMapping(path = "/deletePost")
+    @PreAuthorize("hasAuthority('admin:remove')")
     public ResponseEntity<String> deletePost(@RequestParam("id") String postId) {
         try {
             Post postToDelete = postRepository.findByObjectId(postId);
@@ -82,6 +89,7 @@ public class PostController {
     }
 
     @PutMapping
+    @PreAuthorize("hasAuthority('author:write')")
     public ResponseEntity<Post> updatePost(@RequestParam("postId") String postId, @RequestBody Post post) {
         try {
             Post postToUpdate = postRepository.findByObjectId(postId);
@@ -106,6 +114,7 @@ public class PostController {
     }
 
     @PutMapping(path = "/comment")
+    @PreAuthorize("hasAnyAuthority('author:write','viewer:comment')")
     public ResponseEntity<Comment> addCommentPost(@RequestParam("id") String postId, @RequestBody Comment comment) {
         try {
             Post postToUpdate = postRepository.findByObjectId(postId);
