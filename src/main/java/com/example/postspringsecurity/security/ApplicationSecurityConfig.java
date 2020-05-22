@@ -3,7 +3,7 @@ package com.example.postspringsecurity.security;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
+import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
@@ -17,6 +17,7 @@ import static com.example.postspringsecurity.security.ApplicationUserRole.*;
 
 @Configuration
 @EnableWebSecurity
+@EnableGlobalMethodSecurity(prePostEnabled = true)
 public class ApplicationSecurityConfig extends WebSecurityConfigurerAdapter {
 
     private final PasswordEncoder passwordEncoder;
@@ -32,7 +33,11 @@ public class ApplicationSecurityConfig extends WebSecurityConfigurerAdapter {
                 .csrf().disable()//TODO explain
                 .authorizeRequests()
                 .antMatchers("/", "index", "/css/*", "/js/*").permitAll()
-                .antMatchers("/api/**").hasRole(ADMIN.name())
+//                .antMatchers(HttpMethod.POST, "/api/**").hasAuthority(AUTHOR_WRITE.getPermission())
+//                .antMatchers(HttpMethod.DELETE, "/api/**").hasAuthority(ADMIN_REMOVE.getPermission())
+//                .antMatchers(HttpMethod.PUT, "/api/**").hasAuthority(AUTHOR_WRITE.getPermission())
+//                .antMatchers(HttpMethod.PUT, "/api/v1/posts/comment").hasAnyAuthority(VIEWER_COMMENT.getPermission(), AUTHOR_WRITE.getPermission())
+//                .antMatchers("/api/**").hasAnyRole(ADMIN.name(), AUTHOR.name(), VIEWER.name())
                 .anyRequest().authenticated()
                 .and()
                 .formLogin()
@@ -45,20 +50,24 @@ public class ApplicationSecurityConfig extends WebSecurityConfigurerAdapter {
     @Override
     @Bean
     protected UserDetailsService userDetailsService() {
-        User.UserBuilder luwi = User.builder()
+        UserDetails luwifor = User.builder()
                 .username("luwifor")
-                .password(passwordEncoder.encode("password"))
-                .roles(VIEWER.name());//ROLE VIEWER
+                .password(passwordEncoder.encode("symphony"))
+//                .roles(VIEWER.name())//ROLE_VIEWER
+                .authorities(VIEWER.getGrantedAuthorities())
+                .build();
         UserDetails katya = User.builder()
                 .username("katya")
-                .password(passwordEncoder.encode("mermaid"))
-                .roles(AUTHOR.name())
+                .password(passwordEncoder.encode("symphony"))
+//                .roles(AUTHOR.name())//ROLE_AUTHOR
+                .authorities(AUTHOR.getGrantedAuthorities())
                 .build();
         UserDetails ludwig = User.builder()
                 .username("ludwig")
                 .password(passwordEncoder.encode("symphony"))
-                .roles(ADMIN.name())
+//                .roles(ADMIN.name())//ROLE_ADMIN
+                .authorities(ADMIN.getGrantedAuthorities())
                 .build();
-        return new InMemoryUserDetailsManager(luwi.build(), katya, ludwig);
+        return new InMemoryUserDetailsManager(luwifor, katya, ludwig);
     }
 }
