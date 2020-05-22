@@ -12,6 +12,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 
 import static com.example.postspringsecurity.security.ApplicationUserRole.*;
 
@@ -30,14 +31,13 @@ public class ApplicationSecurityConfig extends WebSecurityConfigurerAdapter {
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http
-                .csrf().disable()//TODO explain
+//                .csrf()// CROSS SITE REQUEST FORGERY IT'S ENABLED BY DEFAULT.
+//                WE HAVE TO DISABLE IT IF THE API IS EXPOSED TO FINAL CLIENTS OR WEB
+//                .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+//                .and()
+                .csrf().disable()
                 .authorizeRequests()
                 .antMatchers("/", "index", "/css/*", "/js/*").permitAll()
-//                .antMatchers(HttpMethod.POST, "/api/**").hasAuthority(AUTHOR_WRITE.getPermission())
-//                .antMatchers(HttpMethod.DELETE, "/api/**").hasAuthority(ADMIN_REMOVE.getPermission())
-//                .antMatchers(HttpMethod.PUT, "/api/**").hasAuthority(AUTHOR_WRITE.getPermission())
-//                .antMatchers(HttpMethod.PUT, "/api/v1/posts/comment").hasAnyAuthority(VIEWER_COMMENT.getPermission(), AUTHOR_WRITE.getPermission())
-//                .antMatchers("/api/**").hasAnyRole(ADMIN.name(), AUTHOR.name(), VIEWER.name())
                 .anyRequest().authenticated()
                 .and()
                 .formLogin()
