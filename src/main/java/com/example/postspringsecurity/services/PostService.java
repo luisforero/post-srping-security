@@ -49,10 +49,10 @@ public class PostService {
     }
 
     public Post updatePost(String postId, Post post) {
-        Post postUpdated = postRepository.findByObjectId(postId);
-        if (postUpdated == null) {
-            throw new NoSuchElementException(String.format("No element found by ObjectID=%s", postId));
-        }
+        Post postUpdated = postRepository.findByObjectId(postId)
+                .orElseThrow(() ->
+                        new NoSuchElementException(String.format("No element found by ObjectID=%s", postId))
+                );
         postUpdated.setBody(post.getBody());
         postUpdated.setTitle(post.getTitle());
         postUpdated.setCategory(post.getCategory());
@@ -64,19 +64,18 @@ public class PostService {
     }
 
     public void deletePost(String postId) {
-        Post postToDelete = postRepository.findByObjectId(postId);
-        if (postToDelete == null) {
-            throw new NoSuchElementException(String.format("No element found by ObjectID=%s", postId));
-        }
+        Post postToDelete = postRepository.findByObjectId(postId)
+                .orElseThrow(() ->
+                        new NoSuchElementException(String.format("No element found by ObjectID=%s", postId))
+                );
         postRepository.delete(postToDelete);
     }
 
     public Comment addCommentPost(String postId, String comment) {
-
-        Post postToUpdate = postRepository.findByObjectId(postId);
-        if (postToUpdate == null) {
-            throw new NoSuchElementException(String.format("No element found by ObjectID=%s", postId));
-        }
+        Post postToUpdate = postRepository.findByObjectId(postId)
+                .orElseThrow(() ->
+                        new NoSuchElementException(String.format("No element found by ObjectID=%s", postId))
+                );
 
         Comment comment1 = Comment.builder()
                 .body(comment)
